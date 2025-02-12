@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escáner QR - Columbus Hospital</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.4/html5-qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #1e3d59;
+            color: white;
+        }
+        .header {
+            background-color: #15293d;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .logo {
+            width: 150px;
+            height: 60px;
+            background-color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 5px;
+            color: #1e3d59;
+            font-weight: bold;
+        }
+        .title {
+            text-align: center;
+            color: white;
+            margin: 0;
+            flex-grow: 1;
+            font-size: 24px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            color: #333;
+        }
+        #reader {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: white;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #1e3d59;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f5f5f5;
+        }
+        tr:hover {
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 class="title">Columbus Hospital Simulation Center</h1>
+        <div class="logo">LOGO</div>
+    </div>
+    <div class="container">
+        <div id="reader"></div>
+        <table id="registros">
+            <thead>
+                <tr>
+                    <th>Cédula</th>
+                    <th>Nombre</th>
+                    <th>Fecha y Hora</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <script>
+        const html5QrcodeScanner = new Html5QrcodeScanner(
+            "reader", { fps: 10, qrbox: 250 });
+
+        function onScanSuccess(decodedText) {
+            try {
+                const datos = JSON.parse(decodedText);
+                const timestamp = new Date().toLocaleString();
+                
+                const tbody = document.querySelector('#registros tbody');
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${datos.cedula}</td>
+                    <td>${datos.nombre}</td>
+                    <td>${timestamp}</td>
+                `;
+                tbody.insertBefore(tr, tbody.firstChild);
+
+                const registros = JSON.parse(localStorage.getItem('registros') || '[]');
+                registros.unshift({
+                    cedula: datos.cedula,
+                    nombre: datos.nombre,
+                    timestamp: timestamp
+                });
+                localStorage.setItem('registros', JSON.stringify(registros));
+            } catch (e) {
+                console.error('Error al procesar el código QR:', e);
+            }
+        }
+
+        html5QrcodeScanner.render(onScanSuccess);
+
+        window.onload = () => {
+            const registros = JSON.parse(localStorage.getItem('registros') || '[]');
+            const tbody = document.querySelector('#registros tbody');
+            registros.forEach(registro => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${registro.cedula}</td>
+                    <td>${registro.nombre}</td>
+                    <td>${registro.timestamp}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        };
+    </script>
+</body>
+</html>
